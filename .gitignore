@@ -27,9 +27,10 @@ db/migrations/*.sql
 # Keep schema definitions
 !db/schemas/*.ts  # Keep TypeScript schema files
 
-
 # Logs & Debugging
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+service-account.json

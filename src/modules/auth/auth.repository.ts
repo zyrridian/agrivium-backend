@@ -9,6 +9,10 @@ export class AuthRepository {
     return user; // Returns user object or undefined if not found
   }
 
+  async deleteUserById(userId: number) {
+    await db.delete(users).where(eq(users.id, userId));
+  }
+
   async findUserByEmail(email: string) {
     return await db.select().from(users).where(eq(users.email, email));
   }

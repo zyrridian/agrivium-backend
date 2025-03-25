@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import { auth } from "../config/firebase";
 
 dotenv.config();
 
@@ -18,4 +19,16 @@ export async function sendEmail(to: string, subject: string, text: string) {
     subject,
     text,
   });
+}
+
+export async function sendFirebaseVerificationEmail(email: string) {
+  const verificationLink = await auth.generateEmailVerificationLink(email);
+
+  console.log(`Verification link: ${verificationLink}`);
+  // Send Firebase's verification email to the user
+  await sendEmail(
+    email,
+    "Verify Your Email",
+    `Click here to verify: ${verificationLink}`
+  );
 }

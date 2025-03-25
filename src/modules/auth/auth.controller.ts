@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
+import { auth } from "../../config/firebase";
 
 const authService = new AuthService();
 
@@ -23,7 +24,13 @@ export async function register(req: Request, res: Response) {
   try {
     const { firstName, lastName, email, password, role } = req.body;
     await authService.registerUser(firstName, lastName, email, password, role);
-    sendResponse(res, 201, "success", "User registered successfully", null);
+    sendResponse(
+      res,
+      201,
+      "success",
+      "User registered successfully. Please verify your email.",
+      null
+    );
   } catch (error) {
     sendResponse(
       res,

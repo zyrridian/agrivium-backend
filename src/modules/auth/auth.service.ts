@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { AuthRepository } from "./auth.repository";
 import { hashPassword } from "../../db/schemas/users.schema";
+import { auth } from "../../config/firebase";
+import { sendFirebaseVerificationEmail } from "../../config/email";
 
 dotenv.config();
 
@@ -22,15 +24,8 @@ export class AuthService {
     firstName: string,
     lastName: string,
     email: string,
-    // phoneNumber: string | null = null,
     password: string,
-    // avatarUrl: string | null = null,
-    // dateOfBirth: string | null = null,
-    // gender: string | null = null,
     role: UserRole = UserRole.CUSTOMER
-    // googleId: string | null = null,
-    // facebookId: string | null = null,
-    // appleId: string | null = null
   ) {
     // Check if user already exists
     const existingUser = await this.authRepository.findUserByEmail(email);
@@ -40,7 +35,7 @@ export class AuthService {
     const hashedPassword = await hashPassword(password);
 
     // Insert user into database
-    await this.authRepository.createUser(
+    const newUser = await this.authRepository.createUser(
       firstName,
       lastName,
       email,
@@ -48,15 +43,46 @@ export class AuthService {
       role
     );
 
-    return { message: "User registered successfully" };
+    try {
+      // Create Firebase User
+      const firebaseUser = await auth.createUser({
+        uid: newUser.id.toString(), // Use DB ID as Firebase UID
+        email,
+        password,
+        displayName: `${firstName} ${lastName}`,
+        emailVerified: false, // Set to false until user verifies
+      });
+
+      await sendFirebaseVerificationEmail(email);
+
+      return {
+        message: "User registered successfully. Please verify your email.",
+      };
+    } catch (error) {
+      // Rollback: Delete user from DB if Firebase fails
+      await this.authRepository.deleteUserById(newUser.id);
+      throw new Error(`Firebase error: ${(error as Error).message}`);
+    }
   }
 
   async loginUser(email: string, passwordHash: string) {
+    // Find user in your database
     const user = await this.authRepository.findUserById(email);
     if (!user) throw new Error("Invalid email or password");
 
+    // Check if password matches
     const isMatch = await bcrypt.compare(passwordHash, user.passwordHash);
     if (!isMatch) throw new Error("Invalid email or password");
+
+    // Check email verification status in Firebase
+    try {
+      const firebaseUser = await auth.getUserByEmail(email);
+      if (!firebaseUser.emailVerified) {
+        throw new Error("Please verify your email before logging in.");
+      }
+    } catch (error) {
+      throw new Error("Authentication failed. Please try again.");
+    }
 
     // Generate JWT token
     const token = jwt.sign(
