@@ -5,8 +5,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js"
+    "build": "tsc && copyfiles service-account.json dist/",
+    "start": "node dist/src/server.js",
+    "migrate": "npx drizzle-kit push"
   },
   "keywords": [],
   "author": "",
@@ -45,6 +46,7 @@
     "@types/pg": "^8.11.11",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
+    "copyfiles": "^2.4.1",
     "drizzle-kit": "^0.30.5",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
