@@ -17,6 +17,13 @@ export class AuthRepository {
     return await db.select().from(users).where(eq(users.email, email));
   }
 
+  async updateUserVerificationStatus(userId: number, status: boolean) {
+    await db
+      .update(users)
+      .set({ isVerified: status })
+      .where(eq(users.id, userId));
+  }
+
   //   async createUser(
   //     name: string,
   //     email: string,
