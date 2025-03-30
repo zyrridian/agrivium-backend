@@ -23,14 +23,14 @@ function sendResponse<T>(
 export async function register(req: Request, res: Response) {
   try {
     const { firstName, lastName, email, password, role } = req.body;
-    await authService.registerUser(firstName, lastName, email, password, role);
-    sendResponse(
-      res,
-      201,
-      "success",
-      "User registered successfully. Please verify your email.",
-      null
+    const response = await authService.registerUser(
+      firstName,
+      lastName,
+      email,
+      password,
+      role
     );
+    sendResponse(res, 201, "success", response.message, null);
   } catch (error) {
     sendResponse(
       res,
@@ -46,8 +46,8 @@ export async function register(req: Request, res: Response) {
 export async function login(req: Request, res: Response) {
   try {
     const { email, password } = req.body;
-    const token = await authService.loginUser(email, password);
-    sendResponse(res, 200, "success", "Login successful", { token });
+    const response = await authService.loginUser(email, password);
+    sendResponse(res, 200, "success", "Login successful", response.data);
   } catch (error) {
     sendResponse(
       res,

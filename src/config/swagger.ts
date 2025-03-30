@@ -1,10 +1,13 @@
-import midtransClient from "midtrans-client";
-import dotenv from "dotenv";
+import swaggerJSDoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
+import fs from "fs";
+import yaml from "yaml";
+import { Express } from "express";
 
-dotenv.config();
+// Load Swagger YAML file
+const swaggerFile = fs.readFileSync("./src/config/swagger.yaml", "utf8");
+const swaggerDocument = yaml.parse(swaggerFile);
 
-export const midtrans = new midtransClient.Snap({
-  isProduction: false, // Set to true for production
-  serverKey: process.env.MIDTRANS_SERVER_KEY,
-  clientKey: process.env.MIDTRANS_CLIENT_KEY,
-});
+export function setupSwagger(app: Express) {
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+}
