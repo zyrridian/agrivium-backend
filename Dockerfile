@@ -23,4 +23,4 @@ EXPOSE 5000
 # CMD ["node", "dist/src/server.js"]
 
 # Run migrations before starting the server
-CMD npx drizzle-kit push && node dist/src/server.js
+CMD npx drizzle-kit migrate && node dist/src/server.js

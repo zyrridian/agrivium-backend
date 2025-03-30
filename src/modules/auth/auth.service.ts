@@ -65,13 +65,19 @@ export class AuthService {
     }
   }
 
-  async loginUser(email: string, passwordHash: string) {
-    // Find user in your database
-    const user = await this.authRepository.findUserById(email);
-    if (!user) throw new Error("Invalid email or password");
+  async loginUser(email: string, password: string) {
+    // Find user in database
+    const user = await this.authRepository.findUserByEmail(email);
+
+    // Ensure user exists and prevent accessing undefined properties
+    if (!user || user.length === 0) {
+      throw new Error("Invalid email or password");
+    }
+
+    const foundUser = user[0]; // Safely access the first user
 
     // Check if password matches
-    const isMatch = await bcrypt.compare(passwordHash, user.passwordHash);
+    const isMatch = await bcrypt.compare(password, foundUser.passwordHash);
     if (!isMatch) throw new Error("Invalid email or password");
 
     // Check email verification status in Firebase
@@ -80,13 +86,27 @@ export class AuthService {
       if (!firebaseUser.emailVerified) {
         throw new Error("Please verify your email before logging in.");
       }
+
+      // If the email is verified, update `isVerified` in the database
+      if (!foundUser.isVerified) {
+        await this.authRepository.updateUserVerificationStatus(
+          foundUser.id,
+          true
+        );
+      }
     } catch (error) {
-      throw new Error("Authentication failed. Please try again.");
+      if ((error as any).code === "auth/user-not-found") {
+        throw new Error("User not found in authentication system.");
+      } else if ((error as Error).message.includes("verify")) {
+        throw new Error("Please verify your email before logging in.");
+      } else {
+        throw new Error(`Authentication failed: ${(error as Error).message}`);
+      }
     }
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.id, role: user.role, email: user.email },
+      { id: foundUser.id, role: foundUser.role, email: foundUser.email },
       process.env.JWT_SECRET!,
       { expiresIn: "1d" }
     );
@@ -95,12 +115,12 @@ export class AuthService {
       success: true,
       message: "Login successful",
       data: {
-        id: user.id,
-        uuid: user.uuid,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        role: user.role,
+        id: foundUser.id,
+        uuid: foundUser.uuid,
+        firstName: foundUser.firstName,
+        lastName: foundUser.lastName,
+        email: foundUser.email,
+        role: foundUser.role,
         token: token,
       },
     };

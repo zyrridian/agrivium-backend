@@ -7,7 +7,8 @@
     "dev": "nodemon src/server.ts",
     "build": "tsc && copyfiles service-account.json dist/",
     "start": "node dist/src/server.js",
-    "migrate": "npx drizzle-kit push"
+    "migrate": "npx drizzle-kit push",
+    "vercel-build": "echo hello"
   },
   "keywords": [],
   "author": "",
