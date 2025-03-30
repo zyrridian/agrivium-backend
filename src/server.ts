@@ -18,7 +18,7 @@ app.use(compression());
 setupSwagger(app);
 
 // Routes
-app.use("/api/auth", authRoutes);
+app.use("/api/v1/auth", authRoutes);
 
 app.listen(process.env.PORT || 5000, () => {
   console.log(`Server running on port ${process.env.PORT || 5000}`);
